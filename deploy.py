@@ -62,6 +62,9 @@ image = (
         "pillow",
         "einops",
         "pycocotools",
+        # sam3.model_builder does `import pkg_resources` at module top;
+        # python 3.12 images don't ship setuptools by default.
+        "setuptools",
     )
     .pip_install(f"git+{REPO_URL}@{REPO_REV}")
     .pip_install("tongflow==0.2.3")
