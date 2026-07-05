@@ -63,8 +63,9 @@ image = (
         "einops",
         "pycocotools",
         # sam3.model_builder does `import pkg_resources` at module top;
-        # python 3.12 images don't ship setuptools by default.
-        "setuptools",
+        # python 3.12 images don't ship setuptools by default, and
+        # setuptools>=81 removed pkg_resources entirely.
+        "setuptools<81",
     )
     .pip_install(f"git+{REPO_URL}@{REPO_REV}")
     .pip_install("tongflow==0.2.3")
