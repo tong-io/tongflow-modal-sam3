@@ -1,4 +1,9 @@
 {
+    "plugin": {
+        "name": "SAM 3",
+        "description": "Text-guided image/video matting with Meta SAM 3 / 3.1 — cut out every instance of a described concept.",
+        "icon": "/plugins/tongflow-modal-sam3.svg"
+    },
     "env": [
         {
             "key": "MODAL_TOKEN_ID",
