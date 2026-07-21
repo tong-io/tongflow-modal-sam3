@@ -68,7 +68,7 @@ image = (
         "setuptools<81",
     )
     .pip_install(f"git+{REPO_URL}@{REPO_REV}")
-    .pip_install("tongflow==0.2.3")
+    .pip_install("tongflow==0.2.13", "fastapi[standard]")
     .env({"HF_HOME": "/models/hf"})
 )
 
@@ -276,3 +276,18 @@ class Inference:
                 raise RuntimeError("video encoding failed")
         with open(out_path, "rb") as f:
             return f.read()
+
+    @modal.fastapi_endpoint(method="GET", label=f"{Path(__file__).resolve().parent.name}-serve")
+    def serve(self, taskId: str = "", token: str = "", origin: str = ""):
+        from fastapi.responses import StreamingResponse
+        from tongflow import serve_stream_from_spec
+
+        return StreamingResponse(
+            serve_stream_from_spec(
+                origin, taskId, token, __file__,
+                invoke=lambda m, inp: getattr(self, m).local(inp),
+            ),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Access-Control-Allow-Origin": "*"},
+        )
+
