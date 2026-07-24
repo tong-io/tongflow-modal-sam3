@@ -68,7 +68,7 @@ image = (
         "setuptools<81",
     )
     .pip_install(f"git+{REPO_URL}@{REPO_REV}")
-    .pip_install("tongflow==0.2.13", "fastapi[standard]")
+    .pip_install("tongflow==0.2.16", "fastapi[standard]")
     .env({"HF_HOME": "/models/hf"})
 )
 
