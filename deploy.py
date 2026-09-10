@@ -26,7 +26,31 @@ from tongflow.models.image_edit import ImageEditInput, ImageEditOutput
 from tongflow.models.video_edit import VideoEditInput, VideoEditOutput
 from tongflow.node_slots import NodeSlots
 from tongflow.protocol import asset, asset_as_path, prompt_media_to_bytes
-from tongflow.slots import node_slot
+from tongflow.slots import current_params, node_slot
+
+
+def _adv(name: str, default):
+    """Advanced-section override (``TONGFLOW_SLOT_PARAMS``) or the plugin default."""
+    v = current_params().get(name)
+    if v is None:
+        return default
+    if isinstance(default, bool):
+        return bool(v)
+    if isinstance(default, int):
+        return int(v)
+    if isinstance(default, float):
+        return float(v)
+    return v
+
+# Per-run knobs offered under the node's collapsed "Advanced" section.
+# Pure literal (the platform scanner reads it by AST, never imports this
+# module). Values reach the handlers via current_params(); an untouched
+# control is absent there and falls back to the plugin default.
+TONGFLOW_SLOT_PARAMS = {
+    "image-edit": {
+        "confidence": {"type": "number", "default": 0.5, "min": 0.05, "max": 0.95, "step": 0.05, "label": "Confidence threshold", "description": "Lower finds more (looser) instances; higher keeps only sure hits."},
+    },
+}
 
 REPO_URL = "https://github.com/facebookresearch/sam3.git"
 # Pin the upstream revision so redeploys are reproducible (main moves).
@@ -68,7 +92,7 @@ image = (
         "setuptools<81",
     )
     .pip_install(f"git+{REPO_URL}@{REPO_REV}")
-    .pip_install("tongflow==0.2.21", "fastapi[standard]")
+    .pip_install("tongflow==0.3.3", "fastapi[standard]")
     .env({"HF_HOME": "/models/hf"})
 )
 
@@ -129,6 +153,7 @@ class Inference:
             img = img.convert("RGB")
 
             with torch.autocast("cuda", dtype=torch.bfloat16):
+                self.processor.confidence_threshold = _adv("confidence", CONFIDENCE)
                 state = self.processor.set_image(img)
                 state = self.processor.set_text_prompt(state=state, prompt=phrase)
 
